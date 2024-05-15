@@ -1,0 +1,65 @@
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { SourceDto } from 'src/source/dto/source.dto';
+import { CreateSourceDto } from './dto/create-source.dto';
+// import { UpdateSourceDto } from './dto/update-source.dto';
+import { Source } from 'src/source/entities/source.entity';
+import { UpdateSourceDto } from 'src/source/dto/update-source.dto';
+@Injectable()
+export class SourceService {
+  constructor(
+    @Inject('SOURCE_REPOSITORY')
+    private sourceRepository: Repository<Source>,
+  ) {}
+
+  async create(createSourceDto: CreateSourceDto): Promise<SourceDto> {
+    const source = this.sourceRepository.create(createSourceDto);
+    const newSource = await this.sourceRepository.save(source);
+    return plainToInstance(SourceDto, newSource, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async findAll(): Promise<SourceDto[]> {
+    const sources: Source[] = await this.sourceRepository.find();
+    return plainToInstance(SourceDto, sources, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async findOne(id: number): Promise<SourceDto> {
+    const source = await this.sourceRepository.findOne({ where: { id } });
+    if (!source) {
+      throw new NotFoundException(`Source with id ${id} not found`);
+    }
+    return source;
+  }
+
+  async update(
+    id: number,
+    updateSourceDto: UpdateSourceDto,
+  ): Promise<SourceDto> {
+    const source = await this.sourceRepository.findOne({ where: { id } });
+    if (!source) {
+      throw new NotFoundException(`Source with id ${id} not found`);
+    }
+    Object.keys(updateSourceDto).forEach((key) => {
+      if (updateSourceDto[key] !== null && updateSourceDto[key] !== undefined) {
+        source[key] = updateSourceDto[key];
+      }
+    });
+    // Update other properties as needed
+    const updatedSource = await this.sourceRepository.save(source);
+    return plainToInstance(SourceDto, updatedSource, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async remove(id: number): Promise<void> {
+    const result = await this.sourceRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Source with id ${id} not found`);
+    }
+  }
+}

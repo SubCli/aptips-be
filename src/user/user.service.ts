@@ -1,0 +1,58 @@
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { UserDto } from 'src/user/dto/user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+// import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from 'src/user/entities/user.entity';
+import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+@Injectable()
+export class UserService {
+  constructor(
+    @Inject('USER_REPOSITORY')
+    private userRepository: Repository<User>,
+  ) {}
+
+  async create(createUserDto: CreateUserDto): Promise<UserDto> {
+    const user = this.userRepository.create(createUserDto);
+    const newUser = await this.userRepository.save(user);
+    return plainToInstance(UserDto, newUser, { excludeExtraneousValues: true });
+  }
+
+  async findAll(): Promise<UserDto[]> {
+    const users: User[] = await this.userRepository.find();
+    return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+  }
+
+  async findOne(id: number): Promise<UserDto> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    Object.keys(updateUserDto).forEach((key) => {
+      if (updateUserDto[key] !== null && updateUserDto[key] !== undefined) {
+        user[key] = updateUserDto[key];
+      }
+    });
+    // Update other properties as needed
+    const updatedUser = await this.userRepository.save(user);
+    return plainToInstance(UserDto, updatedUser, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async remove(id: number): Promise<void> {
+    const result = await this.userRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+  }
+}
