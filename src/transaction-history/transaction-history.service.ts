@@ -9,6 +9,7 @@ import { UpdateTransactionHistoryDto } from './dto/update-transaction-history.dt
 import { Source } from 'src/source/entities/source.entity';
 import { Link } from 'src/link/entities/link.entity';
 import { User } from 'src/user/entities/user.entity';
+import { LinkDto } from 'src/link/dto/link.dto';
 @Injectable()
 export class TransactionHistoryService {
   constructor(
@@ -169,5 +170,20 @@ export class TransactionHistoryService {
     return plainToInstance(TransactionHistoryDto, transactions, {
       excludeExtraneousValues: true,
     });
+  }
+
+  async getTop5LinksByTransactionTotal(): Promise<LinkDto[]> {
+    const links = await this.transactionHistoryRepository
+      .createQueryBuilder('transaction')
+      .leftJoin('transaction.source', 'source')
+      .leftJoin('source.link', 'link')
+      .select('link.id')
+      .addSelect('SUM(transaction.amount)', 'totalAmount')
+      .groupBy('link.id')
+      .orderBy('totalAmount', 'DESC')
+      .limit(5)
+      .getRawMany();
+    console.log(links);
+    return plainToInstance(LinkDto, links, { excludeExtraneousValues: true });
   }
 }

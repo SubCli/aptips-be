@@ -200,4 +200,15 @@ export class TransactionHistoryController {
       throw error;
     }
   }
+
+  @Get('top5-links-by-transaction-total')
+  @ApiOperation({ summary: 'Get top 5 links by transaction total' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getTop5LinksByTransactionTotal() {
+    try {
+      return this.transactionHistoryService.getTop5LinksByTransactionTotal();
+    } catch (error) {
+      throw error;
+    }
+  }
 }
