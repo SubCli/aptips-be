@@ -35,6 +35,10 @@ export class SourceController {
     try {
       return this.sourceService.create(createSourceDto);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
       throw error;
     }
   }

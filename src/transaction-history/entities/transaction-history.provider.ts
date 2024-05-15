@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { TransactionHistory } from './transaction-history.entity';
-
+import { sourceProviders } from 'src/source/entities/source.provider';
 export const transactionHistoryProviders = [
   {
     provide: 'TRANSACTION_HISTORY_REPOSITORY',
@@ -8,4 +8,5 @@ export const transactionHistoryProviders = [
       dataSource.getRepository(TransactionHistory),
     inject: ['DATA_SOURCE'],
   },
+  ...sourceProviders,
 ];

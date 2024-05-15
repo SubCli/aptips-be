@@ -6,14 +6,25 @@ import { CreateSourceDto } from './dto/create-source.dto';
 // import { UpdateSourceDto } from './dto/update-source.dto';
 import { Source } from 'src/source/entities/source.entity';
 import { UpdateSourceDto } from 'src/source/dto/update-source.dto';
+import { Link } from 'src/link/entities/link.entity';
 @Injectable()
 export class SourceService {
   constructor(
     @Inject('SOURCE_REPOSITORY')
     private sourceRepository: Repository<Source>,
+    @Inject('LINK_REPOSITORY')
+    private linkRepository: Repository<Link>,
   ) {}
 
   async create(createSourceDto: CreateSourceDto): Promise<SourceDto> {
+    const isLinkExist = await this.linkRepository.findOne({
+      where: { id: createSourceDto.linkId },
+    });
+    if (!isLinkExist) {
+      throw new NotFoundException(
+        `Link with id ${createSourceDto.linkId} not found`,
+      );
+    }
     const source = this.sourceRepository.create(createSourceDto);
     const newSource = await this.sourceRepository.save(source);
     return plainToInstance(SourceDto, newSource, {
@@ -40,6 +51,16 @@ export class SourceService {
     id: number,
     updateSourceDto: UpdateSourceDto,
   ): Promise<SourceDto> {
+    if (updateSourceDto.linkId) {
+      const isLinkExist = await this.linkRepository.findOne({
+        where: { id: updateSourceDto.linkId },
+      });
+      if (!isLinkExist) {
+        throw new NotFoundException(
+          `Link with id ${updateSourceDto.linkId} not found`,
+        );
+      }
+    }
     const source = await this.sourceRepository.findOne({ where: { id } });
     if (!source) {
       throw new NotFoundException(`Source with id ${id} not found`);

@@ -41,6 +41,10 @@ export class TransactionHistoryController {
     try {
       return this.transactionHistoryService.create(createTransactionHistoryDto);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
       throw error;
     }
   }
@@ -63,7 +67,7 @@ export class TransactionHistoryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get info of a transactionHistory' })
-  @ApiParam({ name: 'id', type: String, description: 'TransactionHistory ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'TransactionHistory ID' })
   @ApiResponse({
     status: 200,
     description: 'Success.',
@@ -71,9 +75,9 @@ export class TransactionHistoryController {
   })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     try {
-      return this.transactionHistoryService.findOne(+id);
+      return this.transactionHistoryService.findOne(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
@@ -85,7 +89,7 @@ export class TransactionHistoryController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Partially update a transactionHistory' })
-  @ApiParam({ name: 'id', type: String, description: 'TransactionHistory ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'TransactionHistory ID' })
   @ApiBody({ type: UpdateTransactionHistoryDto })
   @ApiResponse({
     status: 200,
@@ -96,7 +100,7 @@ export class TransactionHistoryController {
   @ApiResponse({ status: 500, description: 'Error.' })
   @ApiResponse({ status: 400, description: 'Error: Bad Request.' })
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateTransactionHistoryDto: UpdateTransactionHistoryDto,
   ) {
     try {
@@ -115,13 +119,79 @@ export class TransactionHistoryController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a transactionHistory' })
-  @ApiParam({ name: 'id', type: String, description: 'TransactionHistory ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'TransactionHistory ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     try {
-      return this.transactionHistoryService.remove(+id);
+      return this.transactionHistoryService.remove(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('transactions-by-link/:id')
+  @ApiOperation({ summary: 'Get all transaction histories by link ID' })
+  @ApiParam({ name: 'linkId', type: Number, description: 'Link ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [TransactionHistoryDto],
+  })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getAllTransactionHistoriesByLinkId(@Param('linkId') linkId: number) {
+    try {
+      return this.transactionHistoryService.getDonationsToLink(linkId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('transactions-by-source/:id')
+  @ApiOperation({ summary: 'Get all transaction histories by source ID' })
+  @ApiParam({ name: 'sourceId', type: Number, description: 'source ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [TransactionHistoryDto],
+  })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getAllTransactionHistoriesBySourceId(@Param('sourceId') sourceId: number) {
+    try {
+      return this.transactionHistoryService.getDonationsToSource(sourceId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('transactions-by-user/:id')
+  @ApiOperation({ summary: 'Get all transaction histories by user ID' })
+  @ApiParam({ name: 'userId', type: Number, description: 'user ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [TransactionHistoryDto],
+  })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getAllTransactionHistoriesByUserId(@Param('userId') userId: number) {
+    try {
+      return this.transactionHistoryService.getDonationsToUser(userId);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

@@ -16,11 +16,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { LinkService } from './link.service';
-import { UserService } from 'src/user/user.service';
 import { LinkDto } from 'src/link/dto/link.dto';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UpdateLinkDto } from 'src/link/dto/update-link.dto';
-// import { UpdateLinkDto } from './dto/update-link.dto';
 
 @ApiTags('links')
 @Controller('api/link')
