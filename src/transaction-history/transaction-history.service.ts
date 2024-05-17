@@ -53,6 +53,9 @@ export class TransactionHistoryService {
         `User with id ${createTransactionHistoryDto.receiver} not found`,
       );
     }
+    if (createTransactionHistoryDto.note === undefined) {
+      createTransactionHistoryDto.note = '';
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -169,9 +172,24 @@ export class TransactionHistoryService {
     transactionHistories = transactionHistories.sort(
       (a, b) => b.timeStamp.getTime() - a.timeStamp.getTime(),
     );
-    return plainToInstance(TransactionHistoryDto, transactionHistories, {
-      excludeExtraneousValues: true,
-    });
+
+    const TransactionHistoryDtos = [];
+    for (let i = 0; i < transactionHistories.length; i++) {
+      const transactionHistory = transactionHistories[i];
+      const transactionHistoryDto = new TransactionHistoryDto();
+      transactionHistoryDto.id = transactionHistory.id;
+      transactionHistoryDto.sourceId = transactionHistory.sourceId;
+      transactionHistoryDto.senderWallet = transactionHistory.senderWallet;
+      transactionHistoryDto.receiver = transactionHistory.receiver;
+      transactionHistoryDto.amount = transactionHistory.amount;
+      transactionHistoryDto.timeStamp = transactionHistory.timeStamp;
+      transactionHistoryDto.note = transactionHistory.note;
+      transactionHistoryDto.name = transactionHistory.name;
+      transactionHistoryDto.sourceName = isSourceExist.utmSource;
+      TransactionHistoryDtos.push(transactionHistoryDto);
+    }
+
+    return TransactionHistoryDtos;
   }
 
   async getDonationsToLink(linkId: number): Promise<TransactionHistoryDto[]> {
@@ -186,17 +204,32 @@ export class TransactionHistoryService {
     ).map((source) => source.id);
     let transactions = [];
     for (let i = 0; i < sourceIds.length; i++) {
-      const transactionsTmp = await this.transactionHistoryRepository.find({
-        where: { sourceId: sourceIds[i] },
-      });
+      const transactionsTmp: TransactionHistory[] =
+        await this.transactionHistoryRepository.find({
+          where: { sourceId: sourceIds[i] },
+        });
       transactions.push(...transactionsTmp);
     }
     transactions = transactions.sort(
       (a, b) => b.timeStamp.getTime() - a.timeStamp.getTime(),
     );
-    return plainToInstance(TransactionHistoryDto, transactions, {
-      excludeExtraneousValues: true,
-    });
+    for (let i = 0; i < transactions.length; i++) {
+      transactions[i].sourceName = link.name;
+    }
+    const a: TransactionHistoryDto[] = plainToInstance(
+      TransactionHistoryDto,
+      transactions,
+      {
+        excludeExtraneousValues: true,
+      },
+    );
+    for (let i = 0; i < a.length; i++) {
+      const source = await this.sourceRepository.findOne({
+        where: { id: a[i].sourceId },
+      });
+      a[i].sourceName = source.utmSource;
+    }
+    return a;
   }
 
   async getDonationsToUser(
