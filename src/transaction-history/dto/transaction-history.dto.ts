@@ -23,7 +23,7 @@ export class TransactionHistoryDto extends PickType(TransactionHistory, [
 
   @Expose()
   @ApiProperty()
-  sender: string;
+  sender: number;
 
   @Expose()
   @ApiProperty()

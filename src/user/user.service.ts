@@ -55,4 +55,34 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
   }
+
+  async getDonationAllTime(id: number): Promise<number> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    const totalDonation = user.links.reduce(
+      (accumulator, { totalDonations }) => {
+        return accumulator + totalDonations;
+      },
+      0,
+    );
+
+    return totalDonation;
+  }
+
+  async getNumDonationAllTime(id: number): Promise<number> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    const totalNumberDonation = user.links.reduce(
+      (accumulator, { totalNumberDonations }) => {
+        return accumulator + totalNumberDonations;
+      },
+      0,
+    );
+
+    return totalNumberDonation;
+  }
 }

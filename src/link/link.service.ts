@@ -7,6 +7,8 @@ import { CreateLinkDto } from './dto/create-link.dto';
 import { Link } from 'src/link/entities/link.entity';
 import { UpdateLinkDto } from 'src/link/dto/update-link.dto';
 import { User } from 'src/user/entities/user.entity';
+import { Source } from 'src/source/entities/source.entity';
+import { UserDto } from 'src/user/dto/user.dto';
 @Injectable()
 export class LinkService {
   constructor(
@@ -14,6 +16,8 @@ export class LinkService {
     private linkRepository: Repository<Link>,
     @Inject('USER_REPOSITORY')
     private userRepository: Repository<User>,
+    @Inject('SOURCE_REPOSITORY')
+    private sourceRepository: Repository<Source>,
   ) {}
 
   async create(createLinkDto: CreateLinkDto): Promise<LinkDto> {
@@ -27,6 +31,11 @@ export class LinkService {
     }
     const link = this.linkRepository.create(createLinkDto);
     const newLink = await this.linkRepository.save(link);
+    const defaultSource = this.sourceRepository.create({
+      linkId: newLink.id,
+      utmSource: 'default',
+    });
+    await this.sourceRepository.save(defaultSource);
     return plainToInstance(LinkDto, newLink, { excludeExtraneousValues: true });
   }
 
@@ -75,5 +84,34 @@ export class LinkService {
     if (result.affected === 0) {
       throw new NotFoundException(`Link with id ${id} not found`);
     }
+  }
+
+  async get5MostDonated(): Promise<LinkDto[]> {
+    const links = await this.linkRepository
+      .createQueryBuilder('link')
+      .orderBy('link.totalDonations', 'DESC')
+      .limit(5)
+      .getMany();
+    return plainToInstance(LinkDto, links, { excludeExtraneousValues: true });
+  }
+
+  async getUserDonateToLink(linkId: number): Promise<UserDto[]> {
+    const link = await this.linkRepository.findOne({
+      where: { id: linkId },
+    });
+    if (!link) {
+      throw new NotFoundException(`Link with id ${linkId} not found`);
+    }
+    const users: UserDto[] = link.sources.reduce(
+      (userList, { transactionHistories }) => {
+        return userList.concat(
+          transactionHistories.map(({ sendUser }) => sendUser),
+        );
+      },
+      [],
+    );
+    return plainToInstance(UserDto, users, {
+      excludeExtraneousValues: true,
+    });
   }
 }

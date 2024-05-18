@@ -12,10 +12,10 @@ import { ConfigModule } from '@nestjs/config';
   imports: [
     ConfigModule.forRoot(),
     DatabaseModule,
+    UserModule,
     LinkModule,
     SourceModule,
     TransactionHistoryModule,
-    UserModule,
   ],
 })
 export class AppModule {}

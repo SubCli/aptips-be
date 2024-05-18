@@ -19,6 +19,7 @@ import { LinkService } from './link.service';
 import { LinkDto } from 'src/link/dto/link.dto';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UpdateLinkDto } from 'src/link/dto/update-link.dto';
+import { UserDto } from 'src/user/dto/user.dto';
 
 @ApiTags('links')
 @Controller('api/link')
@@ -55,11 +56,11 @@ export class LinkController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get info of a link' })
-  @ApiParam({ name: 'id', type: String, description: 'Link ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
   @ApiResponse({ status: 200, description: 'Success.', type: LinkDto })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     try {
       return this.linkService.findOne(+id);
     } catch (error) {
@@ -73,13 +74,13 @@ export class LinkController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Partially update a link' })
-  @ApiParam({ name: 'id', type: String, description: 'Link ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
   @ApiBody({ type: UpdateLinkDto })
   @ApiResponse({ status: 200, description: 'Success.', type: LinkDto })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
   @ApiResponse({ status: 400, description: 'Error: Bad Request.' })
-  async update(@Param('id') id: string, @Body() updateLinkDto: UpdateLinkDto) {
+  async update(@Param('id') id: number, @Body() updateLinkDto: UpdateLinkDto) {
     try {
       return this.linkService.update(+id, updateLinkDto);
     } catch (error) {
@@ -93,13 +94,43 @@ export class LinkController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a link' })
-  @ApiParam({ name: 'id', type: String, description: 'Link ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     try {
-      return this.linkService.remove(+id);
+      return this.linkService.remove(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('most-5-donated')
+  @ApiOperation({ summary: 'Get 5 most donated links' })
+  @ApiResponse({ status: 200, description: 'Success.', type: [LinkDto] })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  async get5MostDonated() {
+    try {
+      return this.linkService.get5MostDonated();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('users-donate/:id')
+  @ApiOperation({ summary: 'Get users who donate to a link' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
+  @ApiResponse({ status: 200, description: 'Success.', type: [UserDto] })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  async getUserDonateToLink(@Param('id') id: number) {
+    try {
+      return this.linkService.getUserDonateToLink(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

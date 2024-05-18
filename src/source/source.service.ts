@@ -7,6 +7,7 @@ import { CreateSourceDto } from './dto/create-source.dto';
 import { Source } from 'src/source/entities/source.entity';
 import { UpdateSourceDto } from 'src/source/dto/update-source.dto';
 import { Link } from 'src/link/entities/link.entity';
+
 @Injectable()
 export class SourceService {
   constructor(
@@ -82,5 +83,18 @@ export class SourceService {
     if (result.affected === 0) {
       throw new NotFoundException(`Source with id ${id} not found`);
     }
+  }
+
+  async getSourcesByLink(linkId: number): Promise<SourceDto[]> {
+    const link = await this.linkRepository.findOne({
+      where: { id: linkId },
+    });
+    if (!link) {
+      throw new NotFoundException(`Link with id ${linkId} not found`);
+    }
+    const sources: Source[] = link.sources;
+    return plainToInstance(SourceDto, sources, {
+      excludeExtraneousValues: true,
+    });
   }
 }

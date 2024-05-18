@@ -106,4 +106,39 @@ export class UserController {
       throw error;
     }
   }
+
+  @Get('donate-all-time/value/:id')
+  @ApiOperation({ summary: 'Get all-time donation amount of a user' })
+  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Success.', type: Number })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getDonationAllTime(@Param('id') id: number) {
+    try {
+      return this.userService.getDonationAllTime(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+  @Get('donate-all-time/num/:id')
+  @ApiOperation({ summary: 'Get all-time number of donation of a user' })
+  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Success.', type: Number })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getNumberDonationAllTime(@Param('id') id: number) {
+    try {
+      return this.userService.getNumDonationAllTime(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
 }

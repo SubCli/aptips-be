@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { TransactionHistoryDto } from './dto/transaction-history.dto';
 import { CreateTransactionHistoryDto } from './dto/create-transaction-history.dto';
@@ -9,7 +9,6 @@ import { UpdateTransactionHistoryDto } from './dto/update-transaction-history.dt
 import { Source } from 'src/source/entities/source.entity';
 import { Link } from 'src/link/entities/link.entity';
 import { User } from 'src/user/entities/user.entity';
-import { LinkDto } from 'src/link/dto/link.dto';
 @Injectable()
 export class TransactionHistoryService {
   constructor(
@@ -24,6 +23,9 @@ export class TransactionHistoryService {
 
     @Inject('USER_REPOSITORY')
     private userRepository: Repository<User>,
+
+    @Inject('DATA_SOURCE')
+    private dataSource: DataSource,
   ) {}
 
   async create(
@@ -37,14 +39,41 @@ export class TransactionHistoryService {
         `Source with id ${createTransactionHistoryDto.sourceId} not found`,
       );
     }
-    const transactionHistory = this.transactionHistoryRepository.create(
-      createTransactionHistoryDto,
-    );
-    const newTransactionHistory =
-      await this.transactionHistoryRepository.save(transactionHistory);
-    return plainToInstance(TransactionHistoryDto, newTransactionHistory, {
-      excludeExtraneousValues: true,
+    const isUserExist = await this.userRepository.findOne({
+      where: { id: createTransactionHistoryDto.sender },
     });
+    if (!isUserExist) {
+      throw new NotFoundException(
+        `User with id ${createTransactionHistoryDto.sender} not found`,
+      );
+    }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const transactionHistory = this.transactionHistoryRepository.create(
+        createTransactionHistoryDto,
+      );
+      const newTransactionHistory =
+        await queryRunner.manager.save(transactionHistory);
+      const source = newTransactionHistory.source;
+      source.totalDonations += newTransactionHistory.amount;
+      source.totalNumberDonations += 1;
+      await queryRunner.manager.save(source);
+      const link = source.link;
+      link.totalDonations += newTransactionHistory.amount;
+      link.totalNumberDonations += 1;
+      await queryRunner.manager.save(link);
+      await queryRunner.commitTransaction();
+      return plainToInstance(TransactionHistoryDto, newTransactionHistory, {
+        excludeExtraneousValues: true,
+      });
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findAll(): Promise<TransactionHistoryDto[]> {
@@ -147,43 +176,21 @@ export class TransactionHistoryService {
   }
 
   async getDonationsToUser(userId: number): Promise<TransactionHistoryDto[]> {
-    const isUserExist = await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
     });
-    if (!isUserExist) {
+    if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const linkIds = (await this.linkRepository.find({ where: { userId } })).map(
-      (link) => link.id,
-    );
-    const sourceIds = (
-      await this.sourceRepository
-        .createQueryBuilder('source')
-        .where('source.linkId IN (...:linkId)', { linkIds })
-        .getMany()
-    ).map((source) => source.id);
+    const transactions = user.links.reduce((transactionList, { sources }) => {
+      sources.forEach(({ transactionHistories }) => {
+        transactionList.push(...transactionHistories);
+      });
+      return transactionList;
+    }, []);
 
-    const transactions = await this.transactionHistoryRepository
-      .createQueryBuilder('transaction')
-      .where('transaction.sourceId IN (...:sourceId)', { sourceIds })
-      .getMany();
     return plainToInstance(TransactionHistoryDto, transactions, {
       excludeExtraneousValues: true,
     });
-  }
-
-  async getTop5LinksByTransactionTotal(): Promise<LinkDto[]> {
-    const links = await this.transactionHistoryRepository
-      .createQueryBuilder('transaction')
-      .leftJoin('transaction.source', 'source')
-      .leftJoin('source.link', 'link')
-      .select('link.id')
-      .addSelect('SUM(transaction.amount)', 'totalAmount')
-      .groupBy('link.id')
-      .orderBy('totalAmount', 'DESC')
-      .limit(5)
-      .getRawMany();
-    console.log(links);
-    return plainToInstance(LinkDto, links, { excludeExtraneousValues: true });
   }
 }

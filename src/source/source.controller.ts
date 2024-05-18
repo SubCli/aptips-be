@@ -57,11 +57,11 @@ export class SourceController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get info of a source' })
-  @ApiParam({ name: 'id', type: String, description: 'Source ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Source ID' })
   @ApiResponse({ status: 200, description: 'Success.', type: SourceDto })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     try {
       return this.sourceService.findOne(+id);
     } catch (error) {
@@ -75,13 +75,13 @@ export class SourceController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Partially update a source' })
-  @ApiParam({ name: 'id', type: String, description: 'Source ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Source ID' })
   @ApiBody({ type: UpdateSourceDto })
   @ApiResponse({ status: 200, description: 'Success.', type: SourceDto })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
   @ApiResponse({ status: 400, description: 'Error: Bad Request.' })
-  update(@Param('id') id: string, @Body() updateSourceDto: UpdateSourceDto) {
+  update(@Param('id') id: number, @Body() updateSourceDto: UpdateSourceDto) {
     try {
       return this.sourceService.update(+id, updateSourceDto);
     } catch (error) {
@@ -95,13 +95,31 @@ export class SourceController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a source' })
-  @ApiParam({ name: 'id', type: String, description: 'Source ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Source ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     try {
-      return this.sourceService.remove(+id);
+      return this.sourceService.remove(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('sources-of-link/:id')
+  @ApiOperation({ summary: 'Get sources of link' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
+  @ApiResponse({ status: 200, description: 'Success.', type: [SourceDto] })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getSourcesByLink(@Param('id') id: number) {
+    try {
+      return this.sourceService.getSourcesByLink(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

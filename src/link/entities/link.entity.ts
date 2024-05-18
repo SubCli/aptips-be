@@ -4,8 +4,10 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
+import { Source } from 'src/source/entities/source.entity';
 @Entity()
 export class Link {
   @PrimaryGeneratedColumn()
@@ -29,4 +31,13 @@ export class Link {
 
   @Column('text')
   name: string;
+
+  @Column('int', { default: 0, name: 'total_number_donations' })
+  totalNumberDonations: number;
+
+  @Column('double', { default: 0, name: 'total_donations' })
+  totalDonations: number;
+
+  @OneToMany(() => Source, (source) => source.link)
+  sources: Source[];
 }
