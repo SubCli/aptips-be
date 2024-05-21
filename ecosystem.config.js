@@ -16,6 +16,11 @@ module.exports = {
         },
         env_production: {
           NODE_ENV: 'production',
+          DATABASE_HOST: 'localhost',
+          DATABASE_PORT: '3306',
+          DATABASE_USER: 'root',
+          DATABASE_PASSWORD: 'suIp@y2024',
+          DATABASE_NAME: 'suidona',
         },
       },
     ],
