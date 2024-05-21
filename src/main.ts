@@ -3,6 +3,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+
+  console.log('Env user: ' + process.env.USER)
+
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 
@@ -16,7 +19,7 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document);
 
 
-  console.log('Env user: ' + process.env.USER)
+  
 
   await app.listen(3000);
 }
