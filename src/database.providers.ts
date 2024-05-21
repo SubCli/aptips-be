@@ -7,11 +7,11 @@ export const databaseProviders = [
     useFactory: async () => {
       const dataSource = new DataSource({
         type: 'mysql',
-        host: process.env.DATABASE_HOST || '127.0.0.1',
-        port: parseInt(process.env.DATABASE_PORT, 10) || 3306,
-        username: process.env.USER || 'root',
-        password: process.env.PASSWORD || 'suIp@y2024',
-        database: process.env.DATABASE_NAME || 'suidona',
+        host: '127.0.0.1',
+        port: 3306,
+        username:  'root',
+        password:  'suIp@y2024',
+        database: 'suidona',
         entities: [join(__dirname, '**', '*.entity.{ts,js}')],
         synchronize: true,
       });
