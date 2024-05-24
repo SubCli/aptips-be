@@ -1,0 +1,8 @@
+{
+  "editor.unfoldOnClickAfterEndOfLine": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "notebook.insertFinalNewline": false,
+  "prettier.endOfLine": "lf"
+}

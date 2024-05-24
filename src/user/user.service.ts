@@ -85,4 +85,16 @@ export class UserService {
 
     return totalNumberDonation;
   }
+
+  async getUserInfoByWalletAddress(walletAddress: string): Promise<UserDto> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+    });
+    if (!user) {
+      throw new NotFoundException(
+        `User with wallet address ${walletAddress} not found`,
+      );
+    }
+    return user;
+  }
 }

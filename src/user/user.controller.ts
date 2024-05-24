@@ -141,4 +141,26 @@ export class UserController {
       throw error;
     }
   }
+
+  @Get('wallet/:walletAddress')
+  @ApiOperation({ summary: 'Get user info by wallet address' })
+  @ApiParam({
+    name: 'walletAddress',
+    type: String,
+    description: 'User Wallet Address',
+  })
+  @ApiResponse({ status: 200, description: 'Success.', type: UserDto })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getUserInfoByWalletAddress(@Param('walletAddress') walletAddress: string) {
+    try {
+      return this.userService.getUserInfoByWalletAddress(walletAddress);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
 }
