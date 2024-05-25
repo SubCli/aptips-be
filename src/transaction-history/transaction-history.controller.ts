@@ -19,6 +19,8 @@ import { TransactionHistoryService } from './transaction-history.service';
 import { TransactionHistoryDto } from './dto/transaction-history.dto';
 import { CreateTransactionHistoryDto } from './dto/create-transaction-history.dto';
 import { UpdateTransactionHistoryDto } from './dto/update-transaction-history.dto';
+import { TransactionHistoryUserInfoDto } from './dto/transaction-history-userinfo.dto';
+import { RevenueBySourceDto } from 'src/transaction-history/dto/revenue-by-source.dto';
 // import { UpdateTransactionHistoryDto } from './dto/update-transactionHistory.dto';
 
 @ApiTags('transaction-historys')
@@ -185,13 +187,37 @@ export class TransactionHistoryController {
   @ApiResponse({
     status: 200,
     description: 'Success.',
-    type: [TransactionHistoryDto],
+    type: [TransactionHistoryUserInfoDto],
   })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
   getAllTransactionHistoriesByUserId(@Param('userId') userId: number) {
     try {
       return this.transactionHistoryService.getDonationsToUser(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('month-revenue-of-source/:linkId')
+  @ApiOperation({ summary: 'Get month revenue of a source' })
+  @ApiParam({ name: 'linkId', type: Number, description: 'Link ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [RevenueBySourceDto],
+  })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getMonthRevenueOfSource(@Param('linkId') linkId: number) {
+    try {
+      return this.transactionHistoryService.getMonthRevenueOfSourceByLinkId(
+        linkId,
+      );
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

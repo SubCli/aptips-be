@@ -5,10 +5,15 @@ import { TransactionHistoryDto } from './dto/transaction-history.dto';
 import { CreateTransactionHistoryDto } from './dto/create-transaction-history.dto';
 // import { UpdateTransactionHistoryDto } from './dto/update-transactionHistory.dto';
 import { TransactionHistory } from './entities/transaction-history.entity';
+import { TransactionHistoryUserInfoDto } from 'src/transaction-history/dto/transaction-history-userinfo.dto';
 import { UpdateTransactionHistoryDto } from './dto/update-transaction-history.dto';
 import { Source } from 'src/source/entities/source.entity';
 import { Link } from 'src/link/entities/link.entity';
 import { User } from 'src/user/entities/user.entity';
+import { UserDto } from 'src/user/dto/user.dto';
+import { RevenueBySourceDto } from 'src/transaction-history/dto/revenue-by-source.dto';
+import { SourceDto } from 'src/source/dto/source.dto';
+import { RevenueByMonth } from 'src/transaction-history/dto/revenue-by-month.dto';
 @Injectable()
 export class TransactionHistoryService {
   constructor(
@@ -175,7 +180,9 @@ export class TransactionHistoryService {
     });
   }
 
-  async getDonationsToUser(userId: number): Promise<TransactionHistoryDto[]> {
+  async getDonationsToUser(
+    userId: number,
+  ): Promise<TransactionHistoryUserInfoDto[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -188,9 +195,69 @@ export class TransactionHistoryService {
       });
       return transactionList;
     }, []);
+    const transactionHistoryUserInfoDtos = transactions.map(
+      (transaction: TransactionHistory) => {
+        const transactionUserInfoDTO = new TransactionHistoryUserInfoDto();
+        transactionUserInfoDTO.id = transaction.id;
+        transactionUserInfoDTO.sourceId = transaction.sourceId;
+        transactionUserInfoDTO.senderInfo = plainToInstance(
+          UserDto,
+          transaction.sendUser,
+          { excludeExtraneousValues: true },
+        );
+        transactionUserInfoDTO.receiverInfo = plainToInstance(
+          UserDto,
+          transaction.receiveUser,
+          { excludeExtraneousValues: true },
+        );
+        transactionUserInfoDTO.amount = transaction.amount;
+        transactionUserInfoDTO.timeStamp = transaction.timeStamp;
+        return transactionUserInfoDTO;
+      },
+    );
+    return transactionHistoryUserInfoDtos;
+  }
 
-    return plainToInstance(TransactionHistoryDto, transactions, {
-      excludeExtraneousValues: true,
+  async getMonthRevenueOfSourceByLinkId(
+    linkId: number,
+  ): Promise<RevenueBySourceDto[]> {
+    const link = await this.linkRepository.findOne({ where: { id: linkId } });
+    if (!link) {
+      throw new NotFoundException(`Link with id ${linkId} not found`);
+    }
+    const revenueBySourceDtos = link.sources.map((source) => {
+      const revenueBySourceDto = new RevenueBySourceDto();
+      revenueBySourceDto.source = plainToInstance(SourceDto, source, {
+        excludeExtraneousValues: true,
+      });
+      const transactionList = source.transactionHistories;
+
+      const transactionPerMonthList = new Map<string, number>();
+      for (let i = 0; i < transactionList.length; i++) {
+        const month = transactionList[i].timeStamp.getMonth() + 1;
+        const year = transactionList[i].timeStamp.getFullYear();
+        const timeStamp = `${year}-${month}`;
+        if (transactionPerMonthList.has(timeStamp)) {
+          transactionPerMonthList.set(
+            timeStamp,
+            transactionPerMonthList.get(timeStamp) + transactionList[i].amount,
+          );
+        }
+      }
+      const revenueByMonthList = [];
+      for (const [key, value] of transactionPerMonthList) {
+        const revenueByMonth = new RevenueByMonth();
+        const [year, month] = key.split('-');
+        revenueByMonth.year = +year;
+        revenueByMonth.month = +month;
+        revenueByMonth.revenue = value;
+        revenueByMonthList.push(revenueByMonth);
+      }
+      revenueBySourceDto.totalRevenueByMonthList = revenueByMonthList.sort(
+        (a, b) => a.year - b.year || a.month - b.month,
+      );
+      return revenueBySourceDto;
     });
+    return revenueBySourceDtos;
   }
 }

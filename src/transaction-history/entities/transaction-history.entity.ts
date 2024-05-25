@@ -27,8 +27,12 @@ export class TransactionHistory {
   @JoinColumn({ name: 'sender' })
   sendUser: User;
 
-  @Column('text', { name: 'receiver' })
-  receiver: string;
+  @Column('int', { name: 'receiver' })
+  receiver: number;
+
+  @ManyToOne(() => User, (user) => user.id)
+  @JoinColumn({ name: 'receiver' })
+  receiveUser: User;
 
   @Column('double')
   amount: number;
