@@ -26,4 +26,8 @@ export class UserDto extends PickType(User, [
   @Expose()
   @ApiProperty()
   avatarUrl: string;
+
+  @Expose()
+  @ApiProperty()
+  totalDonations: number;
 }

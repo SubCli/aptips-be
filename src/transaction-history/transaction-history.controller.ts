@@ -21,6 +21,7 @@ import { CreateTransactionHistoryDto } from './dto/create-transaction-history.dt
 import { UpdateTransactionHistoryDto } from './dto/update-transaction-history.dto';
 import { TransactionHistoryUserInfoDto } from './dto/transaction-history-userinfo.dto';
 import { RevenueBySourceDto } from 'src/transaction-history/dto/revenue-by-source.dto';
+import { UserDto } from 'src/user/dto/user.dto';
 // import { UpdateTransactionHistoryDto } from './dto/update-transactionHistory.dto';
 
 @ApiTags('transaction-historys')
@@ -218,6 +219,26 @@ export class TransactionHistoryController {
       return this.transactionHistoryService.getMonthRevenueOfSourceByLinkId(
         linkId,
       );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('most-5-donations-user')
+  @ApiOperation({ summary: 'Get 5 users with the most donations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [UserDto],
+  })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  get5UsersWithMostDonations() {
+    try {
+      return this.transactionHistoryService.get5MostSenderUsers();
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

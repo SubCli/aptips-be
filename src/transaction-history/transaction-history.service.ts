@@ -52,6 +52,14 @@ export class TransactionHistoryService {
         `User with id ${createTransactionHistoryDto.sender} not found`,
       );
     }
+    const isReceiverExist = await this.userRepository.findOne({
+      where: { id: createTransactionHistoryDto.receiver },
+    });
+    if (!isReceiverExist) {
+      throw new NotFoundException(
+        `User with id ${createTransactionHistoryDto.receiver} not found`,
+      );
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -69,6 +77,8 @@ export class TransactionHistoryService {
       link.totalDonations += newTransactionHistory.amount;
       link.totalNumberDonations += 1;
       await queryRunner.manager.save(link);
+      isReceiverExist.totalDonations += newTransactionHistory.amount;
+      await queryRunner.manager.save(isReceiverExist);
       await queryRunner.commitTransaction();
       return plainToInstance(TransactionHistoryDto, newTransactionHistory, {
         excludeExtraneousValues: true,
@@ -259,5 +269,13 @@ export class TransactionHistoryService {
       return revenueBySourceDto;
     });
     return revenueBySourceDtos;
+  }
+
+  async get5MostSenderUsers(): Promise<UserDto[]> {
+    const users = await this.userRepository.find({
+      order: { totalDonations: 'DESC' },
+      take: 5,
+    });
+    return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   }
 }
