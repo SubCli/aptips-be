@@ -29,7 +29,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return user;
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto> {
@@ -95,6 +95,6 @@ export class UserService {
         `User with wallet address ${walletAddress} not found`,
       );
     }
-    return user;
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 }

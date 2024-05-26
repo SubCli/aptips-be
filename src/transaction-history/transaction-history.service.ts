@@ -44,14 +44,7 @@ export class TransactionHistoryService {
         `Source with id ${createTransactionHistoryDto.sourceId} not found`,
       );
     }
-    const isUserExist = await this.userRepository.findOne({
-      where: { id: createTransactionHistoryDto.sender },
-    });
-    if (!isUserExist) {
-      throw new NotFoundException(
-        `User with id ${createTransactionHistoryDto.sender} not found`,
-      );
-    }
+
     const isReceiverExist = await this.userRepository.findOne({
       where: { id: createTransactionHistoryDto.receiver },
     });
@@ -77,8 +70,6 @@ export class TransactionHistoryService {
       link.totalDonations += newTransactionHistory.amount;
       link.totalNumberDonations += 1;
       await queryRunner.manager.save(link);
-      isReceiverExist.totalDonations += newTransactionHistory.amount;
-      await queryRunner.manager.save(isReceiverExist);
       await queryRunner.commitTransaction();
       return plainToInstance(TransactionHistoryDto, newTransactionHistory, {
         excludeExtraneousValues: true,
@@ -210,11 +201,9 @@ export class TransactionHistoryService {
         const transactionUserInfoDTO = new TransactionHistoryUserInfoDto();
         transactionUserInfoDTO.id = transaction.id;
         transactionUserInfoDTO.sourceId = transaction.sourceId;
-        transactionUserInfoDTO.senderInfo = plainToInstance(
-          UserDto,
-          transaction.sendUser,
-          { excludeExtraneousValues: true },
-        );
+        const senderInfo = new UserDto();
+        senderInfo.walletAddress = transaction.senderWallet;
+        transactionUserInfoDTO.senderInfo = senderInfo;
         transactionUserInfoDTO.receiverInfo = plainToInstance(
           UserDto,
           transaction.receiveUser,
@@ -291,9 +280,9 @@ export class TransactionHistoryService {
       transactionList.push(...source.transactionHistories);
       return transactionList;
     }, []);
-    const transactionPerUser = new Map<User, number>();
+    const transactionPerUser = new Map<string, number>();
     for (let i = 0; i < transactionList.length; i++) {
-      const sender = transactionList[i].sendUser;
+      const sender = transactionList[i].senderWallet;
       if (transactionPerUser.has(sender)) {
         transactionPerUser.set(
           sender,
@@ -310,7 +299,13 @@ export class TransactionHistoryService {
     for (let i = 0; i < Math.min(num, sortedUsers.length); i++) {
       users.push(sortedUsers[i][0]);
     }
-    return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+    const userDtos =
+      users.map((user) => {
+        const userDto = new UserDto();
+        userDto.walletAddress = user;
+        return userDto;
+      }) || [];
+    return userDtos;
   }
 
   async getMonthRevenueOfAllSourceByUserId(

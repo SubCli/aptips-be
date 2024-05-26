@@ -20,12 +20,8 @@ export class TransactionHistory {
   @JoinColumn({ name: 'source_id' })
   source: Source;
 
-  @Column('int', { name: 'sender' })
-  sender: number;
-
-  @ManyToOne(() => User, (user) => user.id)
-  @JoinColumn({ name: 'sender' })
-  sendUser: User;
+  @Column('text', { name: 'sender_wallet' })
+  senderWallet: string;
 
   @Column('int', { name: 'receiver' })
   receiver: number;

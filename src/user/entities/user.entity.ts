@@ -17,7 +17,4 @@ export class User {
 
   @OneToMany(() => Link, (link) => link.user)
   links: Link[];
-
-  @Column({ name: 'total_donations', default: 0, type: 'float' })
-  totalDonations: number;
 }

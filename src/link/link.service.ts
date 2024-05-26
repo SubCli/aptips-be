@@ -9,6 +9,7 @@ import { UpdateLinkDto } from 'src/link/dto/update-link.dto';
 import { User } from 'src/user/entities/user.entity';
 import { Source } from 'src/source/entities/source.entity';
 import { UserDto } from 'src/user/dto/user.dto';
+import { TransactionHistory } from 'src/transaction-history/entities/transaction-history.entity';
 @Injectable()
 export class LinkService {
   constructor(
@@ -102,16 +103,16 @@ export class LinkService {
     if (!link) {
       throw new NotFoundException(`Link with id ${linkId} not found`);
     }
-    const users: UserDto[] = link.sources.reduce(
-      (userList, { transactionHistories }) => {
-        return userList.concat(
-          transactionHistories.map(({ sendUser }) => sendUser),
-        );
-      },
-      [],
-    );
-    return plainToInstance(UserDto, users, {
-      excludeExtraneousValues: true,
+    const sources = link.sources || [];
+    const transactions = [];
+    for (const source of sources) {
+      transactions.push(...(source.transactionHistories || []));
+    }
+    const userDtos = transactions.map((transaction: TransactionHistory) => {
+      const userDto = new UserDto();
+      userDto.walletAddress = transaction.senderWallet;
+      return userDto;
     });
+    return userDtos;
   }
 }

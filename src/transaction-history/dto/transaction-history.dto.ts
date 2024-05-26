@@ -8,7 +8,7 @@ import { Expose } from 'class-transformer';
 export class TransactionHistoryDto extends PickType(TransactionHistory, [
   'id',
   'sourceId',
-  'sender',
+  'senderWallet',
   'receiver',
   'amount',
   'timeStamp',
@@ -23,7 +23,7 @@ export class TransactionHistoryDto extends PickType(TransactionHistory, [
 
   @Expose()
   @ApiProperty()
-  sender: number;
+  senderWallet: string;
 
   @Expose()
   @ApiProperty()
