@@ -282,12 +282,12 @@ export class TransactionHistoryService {
     return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   }
 
-  // async getMonthRevenueOfAllSource(num: number): Promise<UserDto[]> {
+  // async getMonthRevenueOfAllSourceByUserId(userId: number): Promise<RevenueBySourceDto[]> {
+  //   const user = await this.userRepository.findOne({ where: { id: userId } });
+  //   if (!user) {
+  //     throw new NotFoundException(`User with id ${userId} not found`);
+  //   }
 
-  //   const users = await this.userRepository.find({
-  //     order: { totalReceived: 'DESC' },
-  //     take: num > 10 ? 10 : num,
-  //   });
   //   return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   // }
 }
