@@ -40,4 +40,7 @@ export class Link {
 
   @OneToMany(() => Source, (source) => source.link)
   sources: Source[];
+
+  @Column('text')
+  config: string;
 }

@@ -228,17 +228,18 @@ export class TransactionHistoryController {
     }
   }
 
-  @Get('most-5-donations-user')
+  @Get('most-donations-user')
   @ApiOperation({ summary: 'Get 5 users with the most donations' })
+  @ApiBody({ type: Number, description: 'Number of users to get' })
   @ApiResponse({
     status: 200,
     description: 'Success.',
     type: [UserDto],
   })
   @ApiResponse({ status: 500, description: 'Error.' })
-  get5UsersWithMostDonations() {
+  get5UsersWithMostDonations(@Body() num: number) {
     try {
-      return this.transactionHistoryService.get5MostSenderUsers();
+      return this.transactionHistoryService.getMostSenderUsers(num);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

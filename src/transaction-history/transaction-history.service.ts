@@ -271,11 +271,23 @@ export class TransactionHistoryService {
     return revenueBySourceDtos;
   }
 
-  async get5MostSenderUsers(): Promise<UserDto[]> {
+  async getMostSenderUsers(num: number): Promise<UserDto[]> {
+    if (num <= 0) {
+      throw new NotFoundException('Number of users must be greater than 0');
+    }
     const users = await this.userRepository.find({
       order: { totalDonations: 'DESC' },
-      take: 5,
+      take: num > 10 ? 10 : num,
     });
     return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   }
+
+  // async getMonthRevenueOfAllSource(num: number): Promise<UserDto[]> {
+
+  //   const users = await this.userRepository.find({
+  //     order: { totalReceived: 'DESC' },
+  //     take: num > 10 ? 10 : num,
+  //   });
+  //   return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+  // }
 }

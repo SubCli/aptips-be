@@ -9,4 +9,5 @@ export class CreateLinkDto extends PickType(LinkDto, [
   'receivedAddress',
   'amount',
   'name',
+  'config',
 ] as const) {}

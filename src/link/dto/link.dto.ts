@@ -12,6 +12,7 @@ export class LinkDto extends PickType(Link, [
   'receivedAddress',
   'amount',
   'name',
+  'config',
 ]) {
   @Expose()
   @ApiProperty()
@@ -36,4 +37,8 @@ export class LinkDto extends PickType(Link, [
   @Expose()
   @ApiProperty()
   name: string;
+
+  @Expose()
+  @ApiProperty()
+  config: string;
 }
