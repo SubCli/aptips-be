@@ -229,7 +229,7 @@ export class TransactionHistoryController {
   }
 
   @Get('most-donations-user')
-  @ApiOperation({ summary: 'Get 5 users with the most donations' })
+  @ApiOperation({ summary: 'Get n users with the most donations (max 10)' })
   @ApiBody({ type: Number, description: 'Number of users to get' })
   @ApiResponse({
     status: 200,
