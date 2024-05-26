@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -228,18 +230,27 @@ export class TransactionHistoryController {
     }
   }
 
-  @Get('most-donations-user')
+  @Get('most-donations-user/:userId')
   @ApiOperation({ summary: 'Get n users with the most donations (max 10)' })
-  @ApiBody({ type: Number, description: 'Number of users to get' })
+  // @ApiBody({ type: Number, description: 'Number of users to get' })
+  @ApiParam({ name: 'userId', type: Number, description: 'User ID' })
+  @ApiQuery({
+    name: 'num',
+    type: Number,
+    description: 'Number of users to get',
+  })
   @ApiResponse({
     status: 200,
     description: 'Success.',
     type: [UserDto],
   })
   @ApiResponse({ status: 500, description: 'Error.' })
-  getUsersWithMostDonations(@Body() num: number) {
+  getUsersWithMostDonations(
+    @Param('userId') userId: number,
+    @Query('num') num: number,
+  ) {
     try {
-      return this.transactionHistoryService.getMostSenderUsers(num);
+      return this.transactionHistoryService.getMostSenderUsers(userId, num);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

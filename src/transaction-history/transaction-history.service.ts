@@ -240,7 +240,7 @@ export class TransactionHistoryService {
       revenueBySourceDto.source = plainToInstance(SourceDto, source, {
         excludeExtraneousValues: true,
       });
-      const transactionList = source.transactionHistories;
+      const transactionList = source.transactionHistories || [];
 
       const transactionPerMonthList = new Map<string, number>();
       for (let i = 0; i < transactionList.length; i++) {
@@ -271,14 +271,45 @@ export class TransactionHistoryService {
     return revenueBySourceDtos;
   }
 
-  async getMostSenderUsers(num: number): Promise<UserDto[]> {
+  async getMostSenderUsers(userId: number, num: number): Promise<UserDto[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
     if (num <= 0) {
       throw new NotFoundException('Number of users must be greater than 0');
     }
-    const users = await this.userRepository.find({
-      order: { totalDonations: 'DESC' },
-      take: num > 10 ? 10 : num,
-    });
+    if (num > 10) {
+      num = 10;
+    }
+    const links = user.links || [];
+    const sourceList = [];
+    for (let i = 0; i < links.length; i++) {
+      sourceList.push(...links[i].sources);
+    }
+    const transactionList = sourceList.reduce((transactionList, source) => {
+      transactionList.push(...source.transactionHistories);
+      return transactionList;
+    }, []);
+    const transactionPerUser = new Map<User, number>();
+    for (let i = 0; i < transactionList.length; i++) {
+      const sender = transactionList[i].sendUser;
+      if (transactionPerUser.has(sender)) {
+        transactionPerUser.set(
+          sender,
+          transactionPerUser.get(sender) + transactionList[i].amount,
+        );
+      } else {
+        transactionPerUser.set(sender, transactionList[i].amount);
+      }
+    }
+    const sortedUsers = Array.from(transactionPerUser.entries()).sort(
+      (a, b) => b[1] - a[1],
+    );
+    const users = [];
+    for (let i = 0; i < Math.min(num, sortedUsers.length); i++) {
+      users.push(sortedUsers[i][0]);
+    }
     return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   }
 
@@ -289,7 +320,7 @@ export class TransactionHistoryService {
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const links = user.links;
+    const links = user.links || [];
     const sourceList = [];
     for (let i = 0; i < links.length; i++) {
       sourceList.push(...links[i].sources);
@@ -299,7 +330,7 @@ export class TransactionHistoryService {
       revenueBySourceDto.source = plainToInstance(SourceDto, source, {
         excludeExtraneousValues: true,
       });
-      const transactionList = source.transactionHistories;
+      const transactionList = source.transactionHistories || [];
 
       const transactionPerMonthList = new Map<string, number>();
       for (let i = 0; i < transactionList.length; i++) {
