@@ -237,9 +237,33 @@ export class TransactionHistoryController {
     type: [UserDto],
   })
   @ApiResponse({ status: 500, description: 'Error.' })
-  get5UsersWithMostDonations(@Body() num: number) {
+  getUsersWithMostDonations(@Body() num: number) {
     try {
       return this.transactionHistoryService.getMostSenderUsers(num);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
+
+  @Get('month-revenue-of-source-user/:userId')
+  @ApiOperation({ summary: 'Get month revenue of a source of user' })
+  @ApiParam({ name: 'userId', type: Number, description: 'User ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Success.',
+    type: [RevenueBySourceDto],
+  })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  getMonthRevenueOfSourceOfUser(@Param('userId') userId: number) {
+    try {
+      return this.transactionHistoryService.getMonthRevenueOfAllSourceByUserId(
+        userId,
+      );
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling

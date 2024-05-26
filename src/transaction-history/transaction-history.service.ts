@@ -282,12 +282,51 @@ export class TransactionHistoryService {
     return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
   }
 
-  // async getMonthRevenueOfAllSourceByUserId(userId: number): Promise<RevenueBySourceDto[]> {
-  //   const user = await this.userRepository.findOne({ where: { id: userId } });
-  //   if (!user) {
-  //     throw new NotFoundException(`User with id ${userId} not found`);
-  //   }
+  async getMonthRevenueOfAllSourceByUserId(
+    userId: number,
+  ): Promise<RevenueBySourceDto[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+    const links = user.links;
+    const sourceList = [];
+    for (let i = 0; i < links.length; i++) {
+      sourceList.push(...links[i].sources);
+    }
+    const revenueBySourceDtos = sourceList.map((source) => {
+      const revenueBySourceDto = new RevenueBySourceDto();
+      revenueBySourceDto.source = plainToInstance(SourceDto, source, {
+        excludeExtraneousValues: true,
+      });
+      const transactionList = source.transactionHistories;
 
-  //   return plainToInstance(UserDto, users, { excludeExtraneousValues: true });
-  // }
+      const transactionPerMonthList = new Map<string, number>();
+      for (let i = 0; i < transactionList.length; i++) {
+        const month = transactionList[i].timeStamp.getMonth() + 1;
+        const year = transactionList[i].timeStamp.getFullYear();
+        const timeStamp = `${year}-${month}`;
+        if (transactionPerMonthList.has(timeStamp)) {
+          transactionPerMonthList.set(
+            timeStamp,
+            transactionPerMonthList.get(timeStamp) + transactionList[i].amount,
+          );
+        }
+      }
+      const revenueByMonthList = [];
+      for (const [key, value] of transactionPerMonthList) {
+        const revenueByMonth = new RevenueByMonth();
+        const [year, month] = key.split('-');
+        revenueByMonth.year = +year;
+        revenueByMonth.month = +month;
+        revenueByMonth.revenue = value;
+        revenueByMonthList.push(revenueByMonth);
+      }
+      revenueBySourceDto.totalRevenueByMonthList = revenueByMonthList.sort(
+        (a, b) => a.year - b.year || a.month - b.month,
+      );
+      return revenueBySourceDto;
+    });
+    return revenueBySourceDtos;
+  }
 }
