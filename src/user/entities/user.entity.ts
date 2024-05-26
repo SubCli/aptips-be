@@ -6,10 +6,10 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 64, name: 'wallet_address' })
+  @Column('text', { name: 'wallet_address' })
   walletAddress: string;
 
-  @Column({ length: 64, name: 'email' })
+  @Column('text', { name: 'email' })
   email: string;
 
   @Column('text', { name: 'avatar_url' })
