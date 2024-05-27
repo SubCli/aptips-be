@@ -139,4 +139,22 @@ export class LinkController {
       throw error;
     }
   }
+
+  @Get('link-by-link-code/:linkCode')
+  @ApiOperation({ summary: 'Get link by link code' })
+  @ApiParam({ name: 'linkCode', type: String, description: 'Link Code' })
+  @ApiResponse({ status: 200, description: 'Success.', type: LinkDto })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  async getLinkByLinkCode(@Param('linkCode') linkCode: string) {
+    try {
+      return this.linkService.getLinkByLinkCode(linkCode);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
 }

@@ -115,4 +115,14 @@ export class LinkService {
     });
     return userDtos;
   }
+
+  async getLinkByLinkCode(linkCode: string): Promise<LinkDto> {
+    const link = await this.linkRepository.findOne({
+      where: { linkCode },
+    });
+    if (!link) {
+      throw new NotFoundException(`Link with link code ${linkCode} not found`);
+    }
+    return plainToInstance(LinkDto, link, { excludeExtraneousValues: true });
+  }
 }
