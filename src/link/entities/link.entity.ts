@@ -23,7 +23,7 @@ export class Link {
   @Column('text', { name: 'link_code' })
   linkCode: string;
 
-  @Column({ length: 64, name: 'received_address' })
+  @Column('text', { name: 'received_address' })
   receivedAddress: string;
 
   @Column('double')
