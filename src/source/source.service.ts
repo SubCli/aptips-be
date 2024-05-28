@@ -26,6 +26,17 @@ export class SourceService {
         `Link with id ${createSourceDto.linkId} not found`,
       );
     }
+    const isSourceExist = await this.sourceRepository.findOne({
+      where: {
+        linkId: createSourceDto.linkId,
+        utmSource: createSourceDto.utmSource,
+      },
+    });
+    if (isSourceExist) {
+      throw new NotFoundException(
+        `Source with linkId ${createSourceDto.linkId} and utmSource ${createSourceDto.utmSource} already exists`,
+      );
+    }
     const source = this.sourceRepository.create(createSourceDto);
     const newSource = await this.sourceRepository.save(source);
     return plainToInstance(SourceDto, newSource, {
