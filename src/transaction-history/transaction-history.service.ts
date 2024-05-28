@@ -225,7 +225,8 @@ export class TransactionHistoryService {
     if (!link) {
       throw new NotFoundException(`Link with id ${linkId} not found`);
     }
-    const revenueBySourceDtos = link.sources.map((source) => {
+    const sources = link.sources || [];
+    const revenueBySourceDtos = sources.map((source) => {
       const revenueBySourceDto = new RevenueBySourceDto();
       revenueBySourceDto.source = plainToInstance(SourceDto, source, {
         excludeExtraneousValues: true,
