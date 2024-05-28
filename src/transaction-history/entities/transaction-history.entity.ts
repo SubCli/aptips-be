@@ -33,6 +33,12 @@ export class TransactionHistory {
   @Column('double')
   amount: number;
 
+  @Column('text', { name: 'name' })
+  name: string;
+
+  @Column('text')
+  note: string;
+
   @Column('timestamp', { default: () => 'CURRENT_TIMESTAMP' })
   timeStamp: Date;
 }

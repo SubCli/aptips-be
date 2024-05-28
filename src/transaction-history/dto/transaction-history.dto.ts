@@ -12,6 +12,8 @@ export class TransactionHistoryDto extends PickType(TransactionHistory, [
   'receiver',
   'amount',
   'timeStamp',
+  'note',
+  'name',
 ]) {
   @Expose()
   @ApiProperty()
@@ -32,6 +34,14 @@ export class TransactionHistoryDto extends PickType(TransactionHistory, [
   @Expose()
   @ApiProperty()
   amount: number;
+
+  @Expose()
+  @ApiProperty()
+  note: string;
+
+  @Expose()
+  @ApiProperty()
+  name: string;
 
   @Expose()
   @ApiProperty()
