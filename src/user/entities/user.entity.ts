@@ -15,6 +15,12 @@ export class User {
   @Column('text', { name: 'avatar_url' })
   avatarUrl: string;
 
+  @Column('text', { name: 'full_name' })
+  fullName: string;
+
+  @Column('text', { name: 'detail' })
+  about: string;
+
   @OneToMany(() => Link, (link) => link.user)
   links: Link[];
 }

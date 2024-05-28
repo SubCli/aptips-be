@@ -10,6 +10,8 @@ export class UserDto extends PickType(User, [
   'walletAddress',
   'email',
   'avatarUrl',
+  'fullName',
+  'about',
 ]) {
   @Expose()
   @ApiProperty()
@@ -30,4 +32,12 @@ export class UserDto extends PickType(User, [
   @Expose()
   @ApiProperty()
   totalDonations: number;
+
+  @Expose()
+  @ApiProperty()
+  fullName: string;
+
+  @Expose()
+  @ApiProperty()
+  about: string;
 }
