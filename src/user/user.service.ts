@@ -61,12 +61,10 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const totalDonation = user.links.reduce(
-      (accumulator, { totalDonations }) => {
-        return accumulator + totalDonations;
-      },
-      0,
-    );
+    const links = user.links || [];
+    const totalDonation = links.reduce((accumulator, { totalDonations }) => {
+      return accumulator + totalDonations;
+    }, 0);
 
     return totalDonation;
   }
@@ -76,7 +74,8 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const totalNumberDonation = user.links.reduce(
+    const links = user.links || [];
+    const totalNumberDonation = links.reduce(
       (accumulator, { totalNumberDonations }) => {
         return accumulator + totalNumberDonations;
       },

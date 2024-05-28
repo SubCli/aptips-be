@@ -190,7 +190,8 @@ export class TransactionHistoryService {
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const transactions = user.links.reduce((transactionList, { sources }) => {
+    const links = user.links || [];
+    const transactions = links.reduce((transactionList, { sources }) => {
       sources.forEach(({ transactionHistories }) => {
         transactionList.push(...transactionHistories);
       });
