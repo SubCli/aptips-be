@@ -27,6 +27,9 @@ export class TransactionHistoryDto extends PickType(TransactionHistory, [
   @ApiProperty()
   senderWallet: string;
 
+  @ApiProperty()
+  sourceName: string;
+
   @Expose()
   @ApiProperty()
   receiver: number;

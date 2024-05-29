@@ -13,4 +13,8 @@ export class TransactionHistoryUserInfoDto {
   amount: number;
   @ApiProperty()
   timeStamp: Date;
+  @ApiProperty()
+  note: string;
+  @ApiProperty()
+  name: string;
 }

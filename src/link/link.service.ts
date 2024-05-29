@@ -125,4 +125,11 @@ export class LinkService {
     }
     return plainToInstance(LinkDto, link, { excludeExtraneousValues: true });
   }
+
+  async getLinkByUserId(userId: number): Promise<LinkDto[]> {
+    const links = await this.linkRepository.find({
+      where: { userId },
+    });
+    return plainToInstance(LinkDto, links, { excludeExtraneousValues: true });
+  }
 }

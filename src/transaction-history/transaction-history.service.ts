@@ -97,7 +97,15 @@ export class TransactionHistoryService {
     if (!transactionHistory) {
       throw new NotFoundException(`TransactionHistory with id ${id} not found`);
     }
-    return transactionHistory;
+    const transactionHistoryDTO = plainToInstance(
+      TransactionHistoryDto,
+      transactionHistory,
+      {
+        excludeExtraneousValues: true,
+      },
+    );
+    transactionHistoryDTO.sourceName = transactionHistory.source.utmSource;
+    return transactionHistoryDTO;
   }
 
   async update(
@@ -152,10 +160,13 @@ export class TransactionHistoryService {
     if (!isSourceExist) {
       throw new NotFoundException(`Source with id ${sourceId} not found`);
     }
-    const transactionHistories: TransactionHistory[] =
+    let transactionHistories: TransactionHistory[] =
       await this.transactionHistoryRepository.find({
         where: { sourceId: sourceId },
       });
+    transactionHistories = transactionHistories.sort(
+      (a, b) => b.timeStamp.getTime() - a.timeStamp.getTime(),
+    );
     return plainToInstance(TransactionHistoryDto, transactionHistories, {
       excludeExtraneousValues: true,
     });
@@ -171,11 +182,13 @@ export class TransactionHistoryService {
     const sourceIds = (
       await this.sourceRepository.find({ where: { linkId } })
     ).map((source) => source.id);
-    const transactions = await this.transactionHistoryRepository
+    let transactions = await this.transactionHistoryRepository
       .createQueryBuilder('transaction')
       .where('transaction.sourceId IN (...:sourceId)', { sourceIds })
       .getMany();
-
+    transactions = transactions.sort(
+      (a, b) => b.timeStamp.getTime() - a.timeStamp.getTime(),
+    );
     return plainToInstance(TransactionHistoryDto, transactions, {
       excludeExtraneousValues: true,
     });
@@ -212,6 +225,8 @@ export class TransactionHistoryService {
         );
         transactionUserInfoDTO.amount = transaction.amount;
         transactionUserInfoDTO.timeStamp = transaction.timeStamp;
+        transactionUserInfoDTO.name = transaction.name;
+        transactionUserInfoDTO.note = transaction.note;
         return transactionUserInfoDTO;
       },
     );

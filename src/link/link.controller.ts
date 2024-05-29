@@ -157,4 +157,22 @@ export class LinkController {
       throw error;
     }
   }
+
+  @Get('link-by-user/:userId')
+  @ApiOperation({ summary: 'Get link by user' })
+  @ApiParam({ name: 'userId', type: Number, description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Success.', type: LinkDto })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @ApiResponse({ status: 500, description: 'Error.' })
+  async getLinkByUser(@Param('userId') userId: number) {
+    try {
+      return this.linkService.getLinkByUserId(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message); // Throwing NotFoundException to be caught by NestJS error handling
+      }
+      // Handle other types of errors here
+      throw error;
+    }
+  }
 }

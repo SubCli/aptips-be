@@ -12,6 +12,8 @@ export class LinkDto extends PickType(Link, [
   'receivedAddress',
   'amount',
   'name',
+  'totalNumberDonations',
+  'totalDonations',
   'config',
 ]) {
   @Expose()
@@ -37,6 +39,14 @@ export class LinkDto extends PickType(Link, [
   @Expose()
   @ApiProperty()
   name: string;
+
+  @Expose()
+  @ApiProperty()
+  totalNumberDonations: number;
+
+  @Expose()
+  @ApiProperty()
+  totalDonations: number;
 
   @Expose()
   @ApiProperty()
