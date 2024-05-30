@@ -6,6 +6,8 @@ export class TransactionHistoryUserInfoDto {
   @ApiProperty()
   sourceId: number;
   @ApiProperty()
+  sourceName: string;
+  @ApiProperty()
   senderInfo: UserDto;
   @ApiProperty()
   receiverInfo: UserDto;

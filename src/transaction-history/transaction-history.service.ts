@@ -221,26 +221,30 @@ export class TransactionHistoryService {
         transactions.push(...transactionsTmp);
       }
     }
-    const transactionHistoryUserInfoDtos = transactions.map(
-      (transaction: TransactionHistory) => {
-        const transactionUserInfoDTO = new TransactionHistoryUserInfoDto();
-        transactionUserInfoDTO.id = transaction.id;
-        transactionUserInfoDTO.sourceId = transaction.sourceId;
-        const senderInfo = new UserDto();
-        senderInfo.walletAddress = transaction.senderWallet;
-        transactionUserInfoDTO.senderInfo = senderInfo;
-        transactionUserInfoDTO.receiverInfo = plainToInstance(
-          UserDto,
-          transaction.receiveUser,
-          { excludeExtraneousValues: true },
-        );
-        transactionUserInfoDTO.amount = transaction.amount;
-        transactionUserInfoDTO.timeStamp = transaction.timeStamp;
-        transactionUserInfoDTO.name = transaction.name;
-        transactionUserInfoDTO.note = transaction.note;
-        return transactionUserInfoDTO;
-      },
-    );
+    const transactionHistoryUserInfoDtos = [];
+    for (let i = 0; i < transactions.length; i++) {
+      const transaction = transactions[i];
+      const transactionUserInfoDTO = new TransactionHistoryUserInfoDto();
+      transactionUserInfoDTO.id = transaction.id;
+      transactionUserInfoDTO.sourceId = transaction.sourceId;
+      const senderInfo = new UserDto();
+      senderInfo.walletAddress = transaction.senderWallet;
+      transactionUserInfoDTO.senderInfo = senderInfo;
+      transactionUserInfoDTO.receiverInfo = plainToInstance(
+        UserDto,
+        transaction.receiveUser,
+        { excludeExtraneousValues: true },
+      );
+      transactionUserInfoDTO.amount = transaction.amount;
+      transactionUserInfoDTO.timeStamp = transaction.timeStamp;
+      transactionUserInfoDTO.name = transaction.name;
+      transactionUserInfoDTO.note = transaction.note;
+      const source = await this.sourceRepository.findOne({
+        where: { id: transaction.sourceId },
+      });
+      transactionUserInfoDTO.sourceName = source.utmSource;
+      transactionHistoryUserInfoDtos.push(transactionUserInfoDTO);
+    }
     return transactionHistoryUserInfoDtos;
   }
 

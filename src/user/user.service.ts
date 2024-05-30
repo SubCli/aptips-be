@@ -6,11 +6,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from 'src/user/entities/user.entity';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+import { Link } from 'src/link/entities/link.entity';
 @Injectable()
 export class UserService {
   constructor(
     @Inject('USER_REPOSITORY')
     private userRepository: Repository<User>,
+    @Inject('LINK_REPOSITORY')
+    private linkRepository: Repository<Link>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDto> {
@@ -61,7 +64,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const links = user.links || [];
+    const links = await this.linkRepository.find({ where: { userId: id } });
     const totalDonation = links.reduce((accumulator, { totalDonations }) => {
       return accumulator + totalDonations;
     }, 0);
@@ -74,7 +77,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const links = user.links || [];
+    const links = await this.linkRepository.find({ where: { userId: id } });
     const totalNumberDonation = links.reduce(
       (accumulator, { totalNumberDonations }) => {
         return accumulator + totalNumberDonations;
