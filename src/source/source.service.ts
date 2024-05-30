@@ -33,9 +33,12 @@ export class SourceService {
       },
     });
     if (isSourceExist) {
-      throw new NotFoundException(
-        `Source with linkId ${createSourceDto.linkId} and utmSource ${createSourceDto.utmSource} already exists`,
-      );
+      // throw new NotFoundException(
+      //   `Source with linkId ${createSourceDto.linkId} and utmSource ${createSourceDto.utmSource} already exists`,
+      // );
+      return plainToInstance(SourceDto, isSourceExist, {
+        excludeExtraneousValues: true,
+      });
     }
     const source = this.sourceRepository.create(createSourceDto);
     const newSource = await this.sourceRepository.save(source);
