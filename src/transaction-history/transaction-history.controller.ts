@@ -142,7 +142,7 @@ export class TransactionHistoryController {
 
   @Get('transactions-by-link/:id')
   @ApiOperation({ summary: 'Get all transaction histories by link ID' })
-  @ApiParam({ name: 'linkId', type: Number, description: 'Link ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Link ID' })
   @ApiResponse({
     status: 200,
     description: 'Success.',
@@ -150,7 +150,7 @@ export class TransactionHistoryController {
   })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  getAllTransactionHistoriesByLinkId(@Param('linkId') linkId: number) {
+  getAllTransactionHistoriesByLinkId(@Param('id') linkId: number) {
     try {
       return this.transactionHistoryService.getDonationsToLink(linkId);
     } catch (error) {
@@ -164,7 +164,7 @@ export class TransactionHistoryController {
 
   @Get('transactions-by-source/:id')
   @ApiOperation({ summary: 'Get all transaction histories by source ID' })
-  @ApiParam({ name: 'sourceId', type: Number, description: 'source ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'source ID' })
   @ApiResponse({
     status: 200,
     description: 'Success.',
@@ -172,7 +172,7 @@ export class TransactionHistoryController {
   })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  getAllTransactionHistoriesBySourceId(@Param('sourceId') sourceId: number) {
+  getAllTransactionHistoriesBySourceId(@Param('id') sourceId: number) {
     try {
       return this.transactionHistoryService.getDonationsToSource(sourceId);
     } catch (error) {
@@ -186,7 +186,7 @@ export class TransactionHistoryController {
 
   @Get('transactions-by-user/:id')
   @ApiOperation({ summary: 'Get all transaction histories by user ID' })
-  @ApiParam({ name: 'userId', type: Number, description: 'user ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'user ID' })
   @ApiResponse({
     status: 200,
     description: 'Success.',
@@ -194,8 +194,9 @@ export class TransactionHistoryController {
   })
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 500, description: 'Error.' })
-  getAllTransactionHistoriesByUserId(@Param('userId') userId: number) {
+  getAllTransactionHistoriesByUserId(@Param('id') userId: number) {
     try {
+      console.log(userId);
       return this.transactionHistoryService.getDonationsToUser(userId);
     } catch (error) {
       if (error instanceof NotFoundException) {

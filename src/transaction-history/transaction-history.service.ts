@@ -202,13 +202,17 @@ export class TransactionHistoryService {
   async getDonationsToUser(
     userId: number,
   ): Promise<TransactionHistoryUserInfoDto[]> {
+    console.log(userId);
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
+    console.log(user);
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const links = await this.linkRepository.find({ where: { userId } });
+    const links = await this.linkRepository.find({
+      where: { userId: user.id },
+    });
     const transactions = [];
     for (let i = 0; i < links.length; i++) {
       const sourceIds = (
