@@ -43,4 +43,10 @@ export class Link {
 
   @Column('text')
   config: string;
+
+  @Column('timestamp', {
+    name: 'created_at',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdAt: Date;
 }
