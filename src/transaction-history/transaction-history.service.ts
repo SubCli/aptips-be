@@ -39,7 +39,7 @@ export class TransactionHistoryService {
     const isSourceExist = await this.sourceRepository.findOne({
       where: { id: createTransactionHistoryDto.sourceId },
     });
-    if (isSourceExist) {
+    if (!isSourceExist) {
       throw new NotFoundException(
         `Source with id ${createTransactionHistoryDto.sourceId} not found`,
       );
@@ -63,10 +63,13 @@ export class TransactionHistoryService {
       const newTransactionHistory =
         await queryRunner.manager.save(transactionHistory);
       const source = isSourceExist;
+      console.log(source);
       source.totalDonations += newTransactionHistory.amount;
       source.totalNumberDonations += 1;
       await queryRunner.manager.save(source);
-      const link = source.link;
+      const link = await this.linkRepository.findOne({
+        where: { id: source.linkId },
+      });
       link.totalDonations += newTransactionHistory.amount;
       link.totalNumberDonations += 1;
       await queryRunner.manager.save(link);
