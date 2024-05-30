@@ -63,7 +63,6 @@ export class TransactionHistoryService {
       const newTransactionHistory =
         await queryRunner.manager.save(transactionHistory);
       const source = isSourceExist;
-      console.log(source);
       source.totalDonations += newTransactionHistory.amount;
       source.totalNumberDonations += 1;
       await queryRunner.manager.save(source);
@@ -176,19 +175,22 @@ export class TransactionHistoryService {
   }
 
   async getDonationsToLink(linkId: number): Promise<TransactionHistoryDto[]> {
-    const isLinkExist = await this.linkRepository.findOne({
+    const link = await this.linkRepository.findOne({
       where: { id: linkId },
     });
-    if (!isLinkExist) {
+    if (!link) {
       throw new NotFoundException(`Link with id ${linkId} not found`);
     }
     const sourceIds = (
       await this.sourceRepository.find({ where: { linkId } })
     ).map((source) => source.id);
-    let transactions = await this.transactionHistoryRepository
-      .createQueryBuilder('transaction')
-      .where('transaction.sourceId IN (...:sourceId)', { sourceIds })
-      .getMany();
+    let transactions = [];
+    for (let i = 0; i < sourceIds.length; i++) {
+      const transactionsTmp = await this.transactionHistoryRepository.find({
+        where: { sourceId: sourceIds[i] },
+      });
+      transactions.push(...transactionsTmp);
+    }
     transactions = transactions.sort(
       (a, b) => b.timeStamp.getTime() - a.timeStamp.getTime(),
     );
@@ -206,13 +208,19 @@ export class TransactionHistoryService {
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const links = user.links || [];
-    const transactions = links.reduce((transactionList, { sources }) => {
-      sources.forEach(({ transactionHistories }) => {
-        transactionList.push(...transactionHistories);
-      });
-      return transactionList;
-    }, []);
+    const links = await this.linkRepository.find({ where: { userId } });
+    const transactions = [];
+    for (let i = 0; i < links.length; i++) {
+      const sourceIds = (
+        await this.sourceRepository.find({ where: { linkId: links[i].id } })
+      ).map((source) => source.id);
+      for (let j = 0; j < sourceIds.length; j++) {
+        const transactionsTmp = await this.transactionHistoryRepository.find({
+          where: { sourceId: sourceIds[j] },
+        });
+        transactions.push(...transactionsTmp);
+      }
+    }
     const transactionHistoryUserInfoDtos = transactions.map(
       (transaction: TransactionHistory) => {
         const transactionUserInfoDTO = new TransactionHistoryUserInfoDto();
@@ -243,14 +251,17 @@ export class TransactionHistoryService {
     if (!link) {
       throw new NotFoundException(`Link with id ${linkId} not found`);
     }
-    const sources = link.sources || [];
-    const revenueBySourceDtos = sources.map((source) => {
+    const revenueBySourceDtos = [];
+    const sources = await this.sourceRepository.find({ where: { linkId } });
+    for (let i = 0; i < sources.length; i++) {
+      const source = sources[i];
       const revenueBySourceDto = new RevenueBySourceDto();
       revenueBySourceDto.source = plainToInstance(SourceDto, source, {
         excludeExtraneousValues: true,
       });
-      const transactionList = source.transactionHistories || [];
-
+      const transactionList = await this.transactionHistoryRepository.find({
+        where: { sourceId: source.id },
+      });
       const transactionPerMonthList = new Map<string, number>();
       for (let i = 0; i < transactionList.length; i++) {
         const month = transactionList[i].timeStamp.getMonth() + 1;
@@ -261,6 +272,8 @@ export class TransactionHistoryService {
             timeStamp,
             transactionPerMonthList.get(timeStamp) + transactionList[i].amount,
           );
+        } else {
+          transactionPerMonthList.set(timeStamp, transactionList[i].amount);
         }
       }
       const revenueByMonthList = [];
@@ -275,8 +288,8 @@ export class TransactionHistoryService {
       revenueBySourceDto.totalRevenueByMonthList = revenueByMonthList.sort(
         (a, b) => a.year - b.year || a.month - b.month,
       );
-      return revenueBySourceDto;
-    });
+      revenueBySourceDtos.push(revenueBySourceDto);
+    }
     return revenueBySourceDtos;
   }
 
@@ -291,15 +304,21 @@ export class TransactionHistoryService {
     if (num > 10) {
       num = 10;
     }
-    const links = user.links || [];
+    const links = await this.linkRepository.find({ where: { userId } });
     const sourceList = [];
     for (let i = 0; i < links.length; i++) {
-      sourceList.push(...links[i].sources);
+      const sources = await this.sourceRepository.find({
+        where: { linkId: links[i].id },
+      });
+      sourceList.push(...sources);
     }
-    const transactionList = sourceList.reduce((transactionList, source) => {
-      transactionList.push(...source.transactionHistories);
-      return transactionList;
-    }, []);
+    const transactionList = [];
+    for (let i = 0; i < sourceList.length; i++) {
+      const transactions = await this.transactionHistoryRepository.find({
+        where: { sourceId: sourceList[i].id },
+      });
+      transactionList.push(...transactions);
+    }
     const transactionPerUser = new Map<string, number>();
     for (let i = 0; i < transactionList.length; i++) {
       const sender = transactionList[i].senderWallet;
@@ -316,15 +335,18 @@ export class TransactionHistoryService {
       (a, b) => b[1] - a[1],
     );
     const users = [];
+    const donations = [];
     for (let i = 0; i < Math.min(num, sortedUsers.length); i++) {
       users.push(sortedUsers[i][0]);
+      donations.push(sortedUsers[i][1]);
     }
-    const userDtos =
-      users.map((user) => {
-        const userDto = new UserDto();
-        userDto.walletAddress = user;
-        return userDto;
-      }) || [];
+    const userDtos = [];
+    for (let i = 0; i < users.length; i++) {
+      const userDto = new UserDto();
+      userDto.walletAddress = users[i];
+      userDto.totalDonations = donations[i];
+      userDtos.push(userDto);
+    }
     return userDtos;
   }
 
@@ -335,18 +357,26 @@ export class TransactionHistoryService {
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    const links = user.links || [];
+    const links = await this.linkRepository.find({
+      where: { userId: user.id },
+    });
     const sourceList = [];
     for (let i = 0; i < links.length; i++) {
-      sourceList.push(...links[i].sources);
+      const sources = await this.sourceRepository.find({
+        where: { linkId: links[i].id },
+      });
+      sourceList.push(...sources);
     }
-    const revenueBySourceDtos = sourceList.map((source) => {
+    const revenueBySourceDtos = [];
+    for (let i = 0; i < sourceList.length; i++) {
+      const source = sourceList[i];
       const revenueBySourceDto = new RevenueBySourceDto();
       revenueBySourceDto.source = plainToInstance(SourceDto, source, {
         excludeExtraneousValues: true,
       });
-      const transactionList = source.transactionHistories || [];
-
+      const transactionList = await this.transactionHistoryRepository.find({
+        where: { sourceId: source.id },
+      });
       const transactionPerMonthList = new Map<string, number>();
       for (let i = 0; i < transactionList.length; i++) {
         const month = transactionList[i].timeStamp.getMonth() + 1;
@@ -357,6 +387,8 @@ export class TransactionHistoryService {
             timeStamp,
             transactionPerMonthList.get(timeStamp) + transactionList[i].amount,
           );
+        } else {
+          transactionPerMonthList.set(timeStamp, transactionList[i].amount);
         }
       }
       const revenueByMonthList = [];
@@ -371,8 +403,8 @@ export class TransactionHistoryService {
       revenueBySourceDto.totalRevenueByMonthList = revenueByMonthList.sort(
         (a, b) => a.year - b.year || a.month - b.month,
       );
-      return revenueBySourceDto;
-    });
+      revenueBySourceDtos.push(revenueBySourceDto);
+    }
     return revenueBySourceDtos;
   }
 }
