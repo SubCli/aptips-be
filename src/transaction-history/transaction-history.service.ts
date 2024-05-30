@@ -36,7 +36,7 @@ export class TransactionHistoryService {
   async create(
     createTransactionHistoryDto: CreateTransactionHistoryDto,
   ): Promise<TransactionHistoryDto> {
-    const isSourceExist = await this.transactionHistoryRepository.findOne({
+    const isSourceExist = await this.sourceRepository.findOne({
       where: { id: createTransactionHistoryDto.sourceId },
     });
     if (isSourceExist) {
@@ -62,7 +62,7 @@ export class TransactionHistoryService {
       );
       const newTransactionHistory =
         await queryRunner.manager.save(transactionHistory);
-      const source = newTransactionHistory.source;
+      const source = isSourceExist;
       source.totalDonations += newTransactionHistory.amount;
       source.totalNumberDonations += 1;
       await queryRunner.manager.save(source);
